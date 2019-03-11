@@ -117,6 +117,9 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 	for (auto& statement: _for.pre.statements)
 		visit(statement);
 
+	boost::optional<Assignments> outerAssignmentsSinceCont = boost::none;
+	swap(outerAssignmentsSinceCont, m_assignmentsSinceCont);
+
 	Assignments assignments;
 	assignments(_for.body);
 	assignments(_for.post);
@@ -124,20 +127,19 @@ void DataFlowAnalyzer::operator()(ForLoop& _for)
 
 	visit(*_for.condition);
 	(*this)(_for.body);
+	if (m_assignmentsSinceCont)
+		clearValues(m_assignmentsSinceCont->names());
 	(*this)(_for.post);
 
+	swap(m_assignmentsSinceCont, outerAssignmentsSinceCont);
 	clearValues(assignments.names());
 	popScope();
 }
 
-void DataFlowAnalyzer::operator()(Break&)
-{
-	yulAssert(false, "Not implemented yet.");
-}
-
 void DataFlowAnalyzer::operator()(Continue&)
 {
-	yulAssert(false, "Not implemented yet.");
+	if (!m_assignmentsSinceCont)
+		m_assignmentsSinceCont = {Assignments{}};
 }
 
 void DataFlowAnalyzer::operator()(Block& _block)

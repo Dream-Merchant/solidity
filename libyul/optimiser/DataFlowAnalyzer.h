@@ -23,7 +23,10 @@
 #pragma once
 
 #include <libyul/optimiser/ASTWalker.h>
+#include <libyul/optimiser/NameCollector.h>
 #include <libyul/YulString.h>
+
+#include <boost/optional.hpp>
 
 #include <map>
 #include <set>
@@ -53,7 +56,7 @@ public:
 	void operator()(Switch& _switch) override;
 	void operator()(FunctionDefinition&) override;
 	void operator()(ForLoop&) override;
-	void operator()(Break& _continue) override;
+	void operator()(Break&) override {}
 	void operator()(Continue& _continue) override;
 	void operator()(Block& _block) override;
 
@@ -90,6 +93,7 @@ protected:
 	/// List of scopes.
 	std::vector<Scope> m_variableScopes;
 	Dialect const& m_dialect;
+	boost::optional<Assignments> m_assignmentsSinceCont = boost::none;
 };
 
 }
